@@ -3726,7 +3726,23 @@ static int lan78xx_probe(struct usb_interface *intf,
 	netdev->max_mtu = MAX_SINGLE_PACKET_SIZE;
 	netif_set_gso_max_size(netdev, MAX_SINGLE_PACKET_SIZE - MAX_HEADER);
 
-	period = ep_intr->desc.bInterval;
+	if (intf->cur_altsetting->desc.bNumEndpoints < 3) {
+		ret = -ENODEV;
+		goto out3;
+	}
+
+	dev->ep_blkin = (intf->cur_altsetting)->endpoint + 0;
+	dev->ep_blkout = (intf->cur_altsetting)->endpoint + 1;
+	dev->ep_intr = (intf->cur_altsetting)->endpoint + 2;
+
+	dev->pipe_in = usb_rcvbulkpipe(udev, BULK_IN_PIPE);
+	dev->pipe_out = usb_sndbulkpipe(udev, BULK_OUT_PIPE);
+
+	dev->pipe_intr = usb_rcvintpipe(dev->udev,
+					dev->ep_intr->desc.bEndpointAddress &
+					USB_ENDPOINT_NUMBER_MASK);
+	period = dev->ep_intr->desc.bInterval;
+
 	maxp = usb_maxpacket(dev->udev, dev->pipe_intr, 0);
 	buf = kmalloc(maxp, GFP_KERNEL);
 	if (buf) {
