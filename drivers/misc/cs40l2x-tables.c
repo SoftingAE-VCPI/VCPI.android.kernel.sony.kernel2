@@ -825,3 +825,4 @@ const struct cs40l2x_hw_err_desc cs40l2x_hw_errs[CS40L2X_NUM_HW_ERRS] = {
 		.err_name = "boost converter overvoltage",
 	},
 };
+MODULE_LICENSE("GPL");

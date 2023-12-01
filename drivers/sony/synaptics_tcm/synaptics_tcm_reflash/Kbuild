@@ -1,0 +1,2 @@
+obj-y := synaptics_tcm_reflash.o
+
