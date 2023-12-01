@@ -50,3 +50,4 @@ obj-$(CONFIG_QLGE)		+= qlge/
 obj-$(CONFIG_WFX)		+= wfx/
 obj-$(CONFIG_QCA_CLD_WLAN)	+= wlan-qc/qcacld-3.0/
 obj-y				+= hikey9xx/
+obj-$(CONFIG_QCA_CLD_WLAN)	+= wlan-qc/qcacld-3.0/
