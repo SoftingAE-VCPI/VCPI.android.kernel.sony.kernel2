@@ -1,6 +1,6 @@
 #
 # Kernel module make instructions go here.
 #
-obj-y := nxp_sn1x0_spi.o
+obj-m := nxp_sn1x0_spi.o
 nxp_sn1x0_spi-objs := p73.o
 #ccflags-y := -DDEBUG

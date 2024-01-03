@@ -1,1 +1,1 @@
-obj-y := clearpad_i2c.o
+obj-m := clearpad_i2c.o

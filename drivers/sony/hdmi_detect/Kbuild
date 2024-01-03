@@ -1,1 +1,1 @@
-obj-y := hdmi_detect.o
+obj-m := hdmi_detect.o

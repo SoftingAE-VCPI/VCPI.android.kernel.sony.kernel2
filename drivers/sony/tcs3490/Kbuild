@@ -1,1 +1,1 @@
-obj-y += tcs3490.o
+obj-m += tcs3490.o

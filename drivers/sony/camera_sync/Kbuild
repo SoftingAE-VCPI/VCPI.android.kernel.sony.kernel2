@@ -1,1 +1,1 @@
-obj-y := camera_sync.o
+obj-m := camera_sync.o

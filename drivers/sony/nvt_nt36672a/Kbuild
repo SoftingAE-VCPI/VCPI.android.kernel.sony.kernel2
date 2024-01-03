@@ -1,6 +1,6 @@
 MODULE_NAME = nt36xxx_driver
 
-obj-y := $(MODULE_NAME).o
+obj-m := $(MODULE_NAME).o
 
 $(MODULE_NAME)-objs := nt36xxx.o
 $(MODULE_NAME)-objs += nt36xxx_fw_update.o

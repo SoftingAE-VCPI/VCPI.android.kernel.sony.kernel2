@@ -1,2 +1,2 @@
-obj-y := synaptics_tcm_diagnostics.o
+obj-m := synaptics_tcm_diagnostics.o
 

@@ -1,1 +1,1 @@
-obj-y := clearpad_rmi_dev.o
+obj-m := clearpad_rmi_dev.o

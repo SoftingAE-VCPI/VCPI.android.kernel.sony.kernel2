@@ -1,1 +1,1 @@
-obj-y := somc_battman_dbg.o
+obj-m := somc_battman_dbg.o
