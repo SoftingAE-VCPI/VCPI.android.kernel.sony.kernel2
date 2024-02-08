@@ -165,3 +165,9 @@ arch/arm/boot/dts/vendor
 
 # Documentation toolchain
 sphinx_*/
+
+# Files that were inserted by repo tool
+drivers/staging/wlan-qc/fw-api
+drivers/staging/wlan-qc/qca-wifi-host-cmn
+drivers/staging/wlan-qc/qcacld-3.0
+arch/arm64/configs/sony/
