@@ -1,1 +1,1 @@
-obj-y := clearpad_core.o
+obj-m := clearpad_core.o

@@ -1,1 +1,1 @@
-obj-y := sim_detect.o
+obj-m := sim_detect.o

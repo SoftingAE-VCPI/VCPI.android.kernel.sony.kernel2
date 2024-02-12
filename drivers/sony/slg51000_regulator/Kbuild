@@ -1,1 +1,1 @@
-obj-y += slg51000-regulator.o
+obj-m += slg51000-regulator.o

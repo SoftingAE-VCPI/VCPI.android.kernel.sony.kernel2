@@ -12,6 +12,6 @@ endif
 KBUILD_EXTRA_SYMBOLS := $(src)/../../../drivers/misc/Module.symvers
 
 cirrus_cs40l2x_codec-objs = cs40l2x.o
-obj-y += cirrus_cs40l2x_codec.o
+obj-m += cirrus_cs40l2x_codec.o
 ccflags-y := -I $(LOCAL_DIR)/../../../include
 ccflags-y += -I $(src)/../../../include

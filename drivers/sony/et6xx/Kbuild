@@ -1,4 +1,4 @@
-obj-y := et603-int.o
+obj-m := et603-int.o
 
 ifeq (,$(filter nagara, $(SOMC_TARGET_PLATFORM)))
 et603-int-objs := etxxx_fp.o

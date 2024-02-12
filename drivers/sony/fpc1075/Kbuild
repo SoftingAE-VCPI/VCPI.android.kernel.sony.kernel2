@@ -1,1 +1,1 @@
-obj-y := fpc1075_platform.o
+obj-m := fpc1075_platform.o
