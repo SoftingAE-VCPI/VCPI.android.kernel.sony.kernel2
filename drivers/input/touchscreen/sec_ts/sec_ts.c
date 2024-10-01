@@ -147,6 +147,10 @@ int sec_ts_i2c_write(struct sec_ts_data *ts, u8 reg, u8 *data, int len)
 
 		if (retry > 1) {
 			input_err(true, &ts->client->dev, "%s: I2C retry %d, ret:%d\n", __func__, retry + 1, ret);
+			sec_ts_power(ts, false);
+			usleep_range(1 * 1000, 1 * 1000);
+			sec_ts_power(ts, true);
+			usleep_range(1 * 1000, 1 * 1000);
 			ts->comm_err_count++;
 		}
 	}
@@ -156,6 +160,10 @@ int sec_ts_i2c_write(struct sec_ts_data *ts, u8 reg, u8 *data, int len)
 	if (retry == SEC_TS_I2C_RETRY_CNT) {
 		input_err(true, &ts->client->dev, "%s: I2C write over retry limit\n", __func__);
 		ret = -EIO;
+		sec_ts_power(ts, false);
+		usleep_range(1 * 1000, 1 * 1000);
+		sec_ts_power(ts, true);
+		usleep_range(1 * 1000, 1 * 1000);
 #ifdef USE_POR_AFTER_I2C_RETRY
 		if (ts->after_work.done && !ts->reset_is_on_going)
 			schedule_delayed_work(&ts->reset_work, msecs_to_jiffies(TOUCH_RESET_DWORK_TIME));
@@ -219,6 +227,10 @@ int sec_ts_i2c_read(struct sec_ts_data *ts, u8 reg, u8 *data, int len)
 			if (retry > 1) {
 				input_err(true, &ts->client->dev, "%s: I2C retry %d, ret:%d\n",
 					__func__, retry + 1, ret);
+	                        sec_ts_power(ts, false);
+				usleep_range(1 * 1000, 1 * 1000);
+				sec_ts_power(ts, true);
+				usleep_range(1 * 1000, 1 * 1000);
 				ts->comm_err_count++;
 			}
 		}
@@ -284,6 +296,10 @@ int sec_ts_i2c_read(struct sec_ts_data *ts, u8 reg, u8 *data, int len)
 	if (retry == SEC_TS_I2C_RETRY_CNT) {
 		input_err(true, &ts->client->dev, "%s: I2C read over retry limit\n", __func__);
 		ret = -EIO;
+		sec_ts_power(ts, false);
+		usleep_range(1 * 1000, 1 * 1000);
+		sec_ts_power(ts, true);
+		usleep_range(1 * 1000, 1 * 1000);
 #ifdef USE_POR_AFTER_I2C_RETRY
 		if (ts->after_work.done && !ts->reset_is_on_going)
 			schedule_delayed_work(&ts->reset_work, msecs_to_jiffies(TOUCH_RESET_DWORK_TIME));
@@ -363,6 +379,10 @@ static int sec_ts_i2c_read_bulk(struct sec_ts_data *ts, u8 *data, int len)
 			if (retry > 1) {
 				input_err(true, &ts->client->dev, "%s: I2C retry %d, ret:%d\n",
 					__func__, retry + 1, ret);
+				sec_ts_power(ts, false);
+				usleep_range(1 * 1000, 1 * 1000);
+				sec_ts_power(ts, true);
+				usleep_range(1 * 1000, 1 * 1000);
 				ts->comm_err_count++;
 			}
 		}
@@ -370,6 +390,10 @@ static int sec_ts_i2c_read_bulk(struct sec_ts_data *ts, u8 *data, int len)
 		if (retry == SEC_TS_I2C_RETRY_CNT) {
 			input_err(true, &ts->client->dev, "%s: I2C read over retry limit\n", __func__);
 			ret = -EIO;
+			sec_ts_power(ts, false);
+			usleep_range(1 * 1000, 1 * 1000);
+			sec_ts_power(ts, true);
+			usleep_range(1 * 1000, 1 * 1000);
 
 			break;
 		}
@@ -1225,6 +1249,68 @@ void sec_ts_set_grip_type(struct sec_ts_data *ts, u8 set_type)
 
 }
 
+#if 1
+int sec_ts_power(void *data, bool on)
+{
+	struct sec_ts_data *ts = (struct sec_ts_data *)data;
+	const struct sec_ts_plat_data *pdata = ts->plat_data;
+	struct regulator *regulator_dvdd = NULL;
+	struct regulator *regulator_avdd = NULL;
+	static bool enabled;
+	int ret = 0;
+
+	if (enabled == on)
+		return ret;
+
+	regulator_dvdd = regulator_get(&ts->client->dev, "tsp_io");
+	if (IS_ERR_OR_NULL(regulator_dvdd)) {
+		input_err(true, &ts->client->dev, "%s: Failed to get %s regulator.\n",
+				 __func__, pdata->regulator_dvdd);
+		goto error;
+	}
+
+	regulator_avdd = regulator_get(&ts->client->dev, "tsp_avdd");
+	if (IS_ERR_OR_NULL(regulator_avdd)) {
+		input_err(true, &ts->client->dev, "%s: Failed to get %s regulator.\n",
+			 __func__, pdata->regulator_avdd);
+		goto error;
+	}
+
+	if (on) {
+		ret = regulator_enable(regulator_dvdd);
+		if (ret) {
+			input_err(true, &ts->client->dev, "%s: Failed to enable avdd: %d\n", __func__, ret);
+			goto out;
+		}
+
+		sec_ts_delay(1);
+
+		ret = regulator_enable(regulator_avdd);
+		if (ret) {
+			input_err(true, &ts->client->dev, "%s: Failed to enable vdd: %d\n", __func__, ret);
+			goto out;
+		}
+	} else {
+		regulator_disable(regulator_avdd);
+		sec_ts_delay(4);
+		regulator_disable(regulator_dvdd);
+	}
+
+	enabled = on;
+
+out:
+	input_err(true, &ts->client->dev, "%s: %s: avdd:%s, dvdd:%s\n", __func__, on ? "on" : "off",
+			regulator_is_enabled(regulator_avdd) ? "on" : "off",
+			regulator_is_enabled(regulator_dvdd) ? "on" : "off");
+
+error:
+	regulator_put(regulator_dvdd);
+	regulator_put(regulator_avdd);
+
+	return ret;
+}
+#endif
+
 static int sec_ts_parse_dt(struct i2c_client *client)
 {
 	struct device *dev = &client->dev;
@@ -1762,7 +1848,7 @@ static int sec_ts_after_init(struct sec_ts_data *ts)
 	unsigned char result = 0;
 
 	input_info(true, &ts->client->dev, "%s: start\n", __func__);
-
+	ts->debug_flag = 1;
 	ts->power_status = SEC_TS_STATE_POWER_ON;
 	input_info(true, &ts->client->dev, "%s: request_irq = %d\n", __func__, ts->client->irq);
 	if (!ts->irq_req) {
