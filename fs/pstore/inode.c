@@ -7,6 +7,7 @@
 
 #include <linux/module.h>
 #include <linux/fs.h>
+#include <linux/proc_fs.h>
 #include <linux/fsnotify.h>
 #include <linux/pagemap.h>
 #include <linux/highmem.h>
@@ -266,7 +267,7 @@ static void parse_options(char *options)
  */
 static int pstore_show_options(struct seq_file *m, struct dentry *root)
 {
-	if (kmsg_bytes != PSTORE_DEFAULT_KMSG_BYTES)
+	if (kmsg_bytes != CONFIG_PSTORE_DEFAULT_KMSG_BYTES)
 		seq_printf(m, ",kmsg_bytes=%lu", kmsg_bytes);
 	return 0;
 }
@@ -337,6 +338,21 @@ int pstore_put_backend_records(struct pstore_info *psi)
 	return rc;
 }
 
+static char *console_buffer;
+static ssize_t console_bufsize;
+
+static ssize_t last_kmsg_read(struct file *file, char __user *buf,
+		size_t len, loff_t *offset)
+{
+	return simple_read_from_buffer(buf, len, offset,
+			console_buffer, console_bufsize);
+}
+
+static const struct proc_ops last_kmsg_proc_ops = {
+	.proc_read           = last_kmsg_read,
+	.proc_lseek         = default_llseek,
+};
+
 /*
  * Make a regular file in the root directory of our file system.
  * Load it up with "size" bytes of data from "buf".
@@ -395,6 +411,11 @@ int pstore_mkfile(struct dentry *root, struct pstore_record *record)
 
 	list_add(&private->list, &records_list);
 	mutex_unlock(&records_list_lock);
+
+	if (record->type == PSTORE_TYPE_CONSOLE) {
+		console_buffer = private->record->buf;
+		console_bufsize = size;
+	}
 
 	return 0;
 
@@ -489,6 +510,7 @@ static struct file_system_type pstore_fs_type = {
 int __init pstore_init_fs(void)
 {
 	int err;
+	struct proc_dir_entry *last_kmsg_entry = NULL;
 
 	/* Create a convenient mount point for people to access pstore */
 	err = sysfs_create_mount_point(fs_kobj, "pstore");
@@ -498,6 +520,13 @@ int __init pstore_init_fs(void)
 	err = register_filesystem(&pstore_fs_type);
 	if (err < 0)
 		sysfs_remove_mount_point(fs_kobj, "pstore");
+
+	last_kmsg_entry = proc_create_data("last_kmsg", S_IFREG | S_IRUGO,
+			NULL, &last_kmsg_proc_ops, NULL);
+	if (!last_kmsg_entry) {
+		pr_err("Failed to create last_kmsg\n");
+		goto out;
+	}
 
 out:
 	return err;
