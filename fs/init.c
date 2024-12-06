@@ -143,7 +143,7 @@ int __init init_mknod(const char *filename, umode_t mode, unsigned int dev)
 	struct dentry *dentry;
 	struct path path;
 	int error;
-
+	pr_err("sagar init_mknod %s" , filename);
 	if (S_ISFIFO(mode) || S_ISSOCK(mode))
 		dev = 0;
 	else if (!(S_ISBLK(mode) || S_ISCHR(mode)))
