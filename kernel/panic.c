@@ -210,8 +210,8 @@ void panic(const char *fmt, ...)
 	this_cpu = raw_smp_processor_id();
 	old_cpu  = atomic_cmpxchg(&panic_cpu, PANIC_CPU_INVALID, this_cpu);
 
-	if (old_cpu != PANIC_CPU_INVALID && old_cpu != this_cpu)
-		panic_smp_self_stop();
+	// if (old_cpu != PANIC_CPU_INVALID && old_cpu != this_cpu)
+	// 	panic_smp_self_stop();
 
 	console_verbose();
 	bust_spinlocks(1);
@@ -222,7 +222,9 @@ void panic(const char *fmt, ...)
 	if (len && buf[len - 1] == '\n')
 		buf[len - 1] = '\0';
 
-	pr_emerg("Kernel panic - not syncing: %s\n", buf);
+	kmsg_dump(KMSG_DUMP_OOPS);
+    dump_stack();
+	pr_err("Kernel panic - not syncing: %s\n", buf);
 #ifdef CONFIG_DEBUG_BUGVERBOSE
 	/*
 	 * Avoid nested stack-dumping if a panic occurs during oops processing
@@ -246,6 +248,7 @@ void panic(const char *fmt, ...)
 	 *
 	 * Bypass the panic_cpu check and call __crash_kexec directly.
 	 */
+	kmsg_dump(KMSG_DUMP_PANIC);
 	if (!_crash_kexec_post_notifiers) {
 		printk_safe_flush_on_panic();
 		__crash_kexec(NULL);
@@ -255,14 +258,14 @@ void panic(const char *fmt, ...)
 		 * unfortunately means it may not be hardened to work in a
 		 * panic situation.
 		 */
-		smp_send_stop();
+		//smp_send_stop();
 	} else {
 		/*
 		 * If we want to do crash dump after notifier calls and
 		 * kmsg_dump, we will need architecture dependent extra
 		 * works in addition to stopping other CPUs.
 		 */
-		crash_smp_send_stop();
+		//crash_smp_send_stop();
 	}
 
 	/*
