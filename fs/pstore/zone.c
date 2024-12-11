@@ -395,7 +395,7 @@ static int psz_kmsg_recover_meta(struct psz_context *cxt)
 
 		rcnt = info->read((char *)buf, len, zone->off);
 		if (rcnt == -ENOMSG) {
-			pr_debug("%s with id %lu may be broken, skip\n",
+			pr_err("%s with id %lu may be broken, skip\n",
 					zone->name, i);
 			continue;
 		} else if (rcnt != len) {
@@ -404,12 +404,12 @@ static int psz_kmsg_recover_meta(struct psz_context *cxt)
 		}
 
 		if (buf->sig != zone->buffer->sig) {
-			pr_debug("no valid data in kmsg dump zone %lu\n", i);
+			pr_err("no valid data in kmsg dump zone %lu\n", i);
 			continue;
 		}
 
 		if (zone->buffer_size < atomic_read(&buf->datalen)) {
-			pr_info("found overtop zone: %s: id %lu, off %lld, size %zu\n",
+			pr_err("found overtop zone: %s: id %lu, off %lld, size %zu\n",
 					zone->name, i, zone->off,
 					zone->buffer_size);
 			continue;
@@ -417,7 +417,7 @@ static int psz_kmsg_recover_meta(struct psz_context *cxt)
 
 		hdr = (struct psz_kmsg_header *)buf->data;
 		if (hdr->magic != PSTORE_KMSG_HEADER_MAGIC) {
-			pr_info("found invalid zone: %s: id %lu, off %lld, size %zu\n",
+			pr_err("found invalid zone: %s: id %lu, off %lld, size %zu\n",
 					zone->name, i, zone->off,
 					zone->buffer_size);
 			continue;
@@ -440,7 +440,7 @@ static int psz_kmsg_recover_meta(struct psz_context *cxt)
 				max(cxt->panic_counter, hdr->counter);
 
 		if (!atomic_read(&buf->datalen)) {
-			pr_debug("found erased zone: %s: id %lu, off %lld, size %zu, datalen %d\n",
+			pr_err("found erased zone: %s: id %lu, off %lld, size %zu, datalen %d\n",
 					zone->name, i, zone->off,
 					zone->buffer_size,
 					atomic_read(&buf->datalen));
@@ -449,7 +449,7 @@ static int psz_kmsg_recover_meta(struct psz_context *cxt)
 
 		if (!is_on_panic())
 			zone->should_recover = true;
-		pr_debug("found nice zone: %s: id %lu, off %lld, size %zu, datalen %d\n",
+		pr_err("found nice zone: %s: id %lu, off %lld, size %zu, datalen %d\n",
 				zone->name, i, zone->off,
 				zone->buffer_size, atomic_read(&buf->datalen));
 	}
@@ -474,7 +474,7 @@ static int psz_kmsg_recover(struct psz_context *cxt)
 
 	return 0;
 recover_fail:
-	pr_debug("psz_recover_kmsg failed\n");
+	pr_err("psz_recover_kmsg failed\n");
 	return ret;
 }
 
@@ -501,31 +501,31 @@ static int psz_recover_zone(struct psz_context *cxt, struct pstore_zone *zone)
 	len = sizeof(struct psz_buffer);
 	rcnt = info->read((char *)&tmpbuf, len, zone->off);
 	if (rcnt != len) {
-		pr_debug("read zone %s failed\n", zone->name);
+		pr_err("read zone %s failed\n", zone->name);
 		return (int)rcnt < 0 ? (int)rcnt : -EIO;
 	}
 
 	if (tmpbuf.sig != zone->buffer->sig) {
-		pr_debug("no valid data in zone %s\n", zone->name);
+		pr_err("no valid data in zone %s\n", zone->name);
 		return 0;
 	}
 
 	if (zone->buffer_size < atomic_read(&tmpbuf.datalen) ||
 		zone->buffer_size < atomic_read(&tmpbuf.start)) {
-		pr_info("found overtop zone: %s: off %lld, size %zu\n",
+		pr_err("found overtop zone: %s: off %lld, size %zu\n",
 				zone->name, zone->off, zone->buffer_size);
 		/* just keep going */
 		return 0;
 	}
 
 	if (!atomic_read(&tmpbuf.datalen)) {
-		pr_debug("found erased zone: %s: off %lld, size %zu, datalen %d\n",
+		pr_err("found erased zone: %s: off %lld, size %zu, datalen %d\n",
 				zone->name, zone->off, zone->buffer_size,
 				atomic_read(&tmpbuf.datalen));
 		return 0;
 	}
 
-	pr_debug("found nice zone: %s: off %lld, size %zu, datalen %d\n",
+	pr_err("found nice zone: %s: off %lld, size %zu, datalen %d\n",
 			zone->name, zone->off, zone->buffer_size,
 			atomic_read(&tmpbuf.datalen));
 
@@ -586,7 +586,7 @@ static int psz_recover_zones(struct psz_context *cxt,
 
 	return 0;
 recover_fail:
-	pr_debug("recover %s[%u] failed\n", zone->name, i);
+	pr_err("recover %s[%u] failed\n", zone->name, i);
 	return ret;
 }
 
@@ -623,7 +623,7 @@ out:
 	if (unlikely(ret))
 		pr_err("recover failed\n");
 	else {
-		pr_debug("recover end!\n");
+		pr_err("recover end!\n");
 		atomic_set(&cxt->recovered, 1);
 	}
 	return ret;
@@ -768,7 +768,7 @@ static inline int notrace psz_kmsg_write_record(struct psz_context *cxt,
 		}
 		zone->buffer->sig = zone->oldbuf->sig;
 
-		pr_debug("write %s to zone id %d\n", zone->name, zonenum);
+		pr_err("write %s to zone id %d\n", zone->name, zonenum);
 		psz_write_kmsg_hdr(zone, record);
 		hlen = sizeof(struct psz_kmsg_header);
 		size = min_t(size_t, record->size, zone->buffer_size - hlen);
@@ -782,7 +782,7 @@ static inline int notrace psz_kmsg_write_record(struct psz_context *cxt,
 			return ret;
 		}
 
-		pr_debug("zone %u may be broken, try next dmesg zone\n",
+		pr_err("zone %u may be broken, try next dmesg zone\n",
 				zonenum);
 		kfree(zone->buffer);
 		zone->buffer = zone->oldbuf;
@@ -812,7 +812,7 @@ static int notrace psz_kmsg_write(struct psz_context *cxt,
 	ret = psz_kmsg_write_record(cxt, record);
 	if (!ret && is_on_panic()) {
 		/* ensure all data are flushed to storage when panic */
-		pr_debug("try to flush other dirty zones\n");
+		pr_err("try to flush other dirty zones\n");
 		psz_flush_all_dirty_zones(NULL);
 	}
 
@@ -1185,7 +1185,7 @@ static struct pstore_zone *psz_init_zone(enum pstore_type_id type,
 
 	*off += size;
 
-	pr_debug("pszone %s: off 0x%llx, %zu header, %zu data\n", zone->name,
+	pr_err("pszone %s: off 0x%llx, %zu header, %zu data\n", zone->name,
 			zone->off, sizeof(*zone->buffer), zone->buffer_size);
 	return zone;
 }
@@ -1296,17 +1296,17 @@ int register_pstore_zone(struct pstore_zone_info *info)
 	struct psz_context *cxt = &pstore_zone_cxt;
 
 	if (info->total_size < 4096) {
-		pr_warn("total_size must be >= 4096\n");
+		pr_err("total_size must be >= 4096\n");
 		return -EINVAL;
 	}
 	if (info->total_size > SZ_128M) {
-		pr_warn("capping size to 128MiB\n");
+		pr_err("capping size to 128MiB\n");
 		info->total_size = SZ_128M;
 	}
 
 	if (!info->kmsg_size && !info->pmsg_size && !info->console_size &&
 	    !info->ftrace_size) {
-		pr_warn("at least one record size must be non-zero\n");
+		pr_err("at least one record size must be non-zero\n");
 		return -EINVAL;
 	}
 
@@ -1345,19 +1345,19 @@ int register_pstore_zone(struct pstore_zone_info *info)
 
 	mutex_lock(&cxt->pstore_zone_info_lock);
 	if (cxt->pstore_zone_info) {
-		pr_warn("'%s' already loaded: ignoring '%s'\n",
+		pr_err("'%s' already loaded: ignoring '%s'\n",
 				cxt->pstore_zone_info->name, info->name);
 		mutex_unlock(&cxt->pstore_zone_info_lock);
 		return -EBUSY;
 	}
 	cxt->pstore_zone_info = info;
 
-	pr_debug("register %s with properties:\n", info->name);
-	pr_debug("\ttotal size : %ld Bytes\n", info->total_size);
-	pr_debug("\tkmsg size : %ld Bytes\n", info->kmsg_size);
-	pr_debug("\tpmsg size : %ld Bytes\n", info->pmsg_size);
-	pr_debug("\tconsole size : %ld Bytes\n", info->console_size);
-	pr_debug("\tftrace size : %ld Bytes\n", info->ftrace_size);
+	pr_err("register %s with properties:\n", info->name);
+	pr_err("\ttotal size : %ld Bytes\n", info->total_size);
+	pr_err("\tkmsg size : %ld Bytes\n", info->kmsg_size);
+	pr_err("\tpmsg size : %ld Bytes\n", info->pmsg_size);
+	pr_err("\tconsole size : %ld Bytes\n", info->console_size);
+	pr_err("\tftrace size : %ld Bytes\n", info->ftrace_size);
 
 	err = psz_alloc_zones(cxt);
 	if (err) {
@@ -1376,7 +1376,7 @@ int register_pstore_zone(struct pstore_zone_info *info)
 	}
 	cxt->pstore.data = cxt;
 
-	pr_info("registered %s as backend for", info->name);
+	pr_err("registered %s as backend for", info->name);
 	cxt->pstore.max_reason = info->max_reason;
 	cxt->pstore.name = info->name;
 	if (info->kmsg_size) {

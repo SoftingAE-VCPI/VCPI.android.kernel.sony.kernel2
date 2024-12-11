@@ -256,7 +256,7 @@ EXPORT_SYMBOL_GPL(pstore_blk_get_config);
 
 
 #ifndef MODULE
-static const char devname[] = "dev/sagar";
+static const char devname[] = "/dev/sagar";
 static __init const char *early_boot_devpath(const char *initial_devname)
 {
     int err;
