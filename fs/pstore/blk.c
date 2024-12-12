@@ -217,6 +217,13 @@ static ssize_t psblk_generic_blk_write(const char *buf, size_t bytes,
 	return kernel_write(psblk_file, buf, bytes, &pos);
 }
 
+static ssize_t psblk_panic_blk_write(const char *buf, size_t bytes,
+		loff_t pos)
+{
+	pr_info("psblk_panic_blk_write");
+	return kernel_write(psblk_file, buf, bytes, &pos);
+}
+
 /*
  * This takes its configuration only from the module parameters now.
  */
@@ -225,6 +232,7 @@ static int __register_pstore_blk(const char *devpath)
 	struct pstore_device_info dev = {
 		.read = psblk_generic_blk_read,
 		.write = psblk_generic_blk_write,
+		.panic_write = psblk_panic_blk_write,
 	};
 	struct inode *inode;
 	int ret = -ENODEV;
@@ -366,6 +374,7 @@ static void __exit pstore_blk_exit(void)
 module_exit(pstore_blk_exit);
 
 MODULE_LICENSE("GPL");
+MODULE_IMPORT_NS(ANDROID_GKI_VFS_EXPORT_ONLY);
 MODULE_AUTHOR("WeiXiong Liao <liaoweixiong@allwinnertech.com>");
 MODULE_AUTHOR("Kees Cook <keescook@chromium.org>");
 MODULE_DESCRIPTION("pstore backend for block devices");
