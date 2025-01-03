@@ -1269,7 +1269,33 @@
 	tlmm-vm-mem-access {
 		compatible = "qcom,tlmm-vm-mem-access";
 		qcom,master;
-		tlmm-vm-gpio-list = <365 366 367 368 301 305 387 388 317 318 319 320 321 322>;
+		tlmm-vm-gpio-list = <&tlmm 86 0 &tlmm 87 0 &tlmm 133 0 &tlmm 137 0 &tlmm 44 0 &tlmm 45 0 &tlmm 46 0
+					&tlmm 47 0 &tlmm 24 0 &tlmm 25 0 &tlmm 91 0 &tlmm 56 0
+					&tlmm 57 0 &tlmm 58 0 &tlmm 59 0 &tlmm 13 0 &tlmm 48 0>;
+	};
+
+	tlmm-vm-test {
+		compatible = "qcom,tlmm-vm-test";
+		qcom,master;
+		tlmm-vm-gpio-list = <&tlmm 86 0 &tlmm 87 0 &tlmm 133 0 &tlmm 137 0 &tlmm 44 0 &tlmm 45 0 &tlmm 46 0
+				&tlmm 47 0 &tlmm 24 0 &tlmm 25 0 &tlmm 91 0 &tlmm 56 0
+				&tlmm 57 0 &tlmm 58 0 &tlmm 59 0 &tlmm 13 0 &tlmm 48 0>;
+	};
+
+	tlmm-vm-mem-access {
+		compatible = "qcom,tlmm-vm-mem-access";
+		qcom,master;
+		tlmm-vm-gpio-list = <&tlmm 86 0 &tlmm 87 0 &tlmm 133 0 &tlmm 137 0 &tlmm 44 0 &tlmm 45 0 &tlmm 46 0
+					&tlmm 47 0 &tlmm 24 0 &tlmm 25 0 &tlmm 91 0 &tlmm 56 0
+					&tlmm 57 0 &tlmm 58 0 &tlmm 59 0 &tlmm 13 0 &tlmm 48 0>;
+	};
+
+	tlmm-vm-test {
+		compatible = "qcom,tlmm-vm-test";
+		qcom,master;
+		tlmm-vm-gpio-list = <&tlmm 86 0 &tlmm 87 0 &tlmm 133 0 &tlmm 137 0 &tlmm 44 0 &tlmm 45 0 &tlmm 46 0
+				&tlmm 47 0 &tlmm 24 0 &tlmm 25 0 &tlmm 91 0 &tlmm 56 0
+				&tlmm 57 0 &tlmm 58 0 &tlmm 59 0 &tlmm 13 0 &tlmm 48 0>;
 	};
 
 	qcom,gh_vm_loader_sec@e0b00000 {
@@ -2504,7 +2530,7 @@
 		compatible = "qcom,msm-fastrpc-compute";
 		qcom,adsp-remoteheap-vmid = <22 37>;
 		qcom,fastrpc-adsp-audio-pdr;
-		qcom,fastrpc-adsp-sensors-pdr;
+		qcom,fastrpc-slpi-sensors-pdr;
 		qcom,rpc-latency-us = <235>;
 		qcom,fastrpc-gids = <2908>;
 		qcom,qos-cores = <0 1 2 3>;
@@ -3216,6 +3242,33 @@
 		shared-buffers = <&trust_ui_vm_vblk0_ring &trust_ui_vm_swiotlb>;
 	};
 
+	trust_ui_vm_virt_be0: trust_ui_vm_virt_be0@11 {
+		qcom,vm = <&trust_ui_vm>;
+		qcom,label = <0x11>;
+	};
+
+	trust_ui_vm_virt_be1: trust_ui_vm_virt_be1@10 {
+		qcom,vm = <&trust_ui_vm>;
+		qcom,label = <0x10>;
+	};
+
+	gh-secure-vm-loader@0 {
+		compatible = "qcom,gh-secure-vm-loader";
+		qcom,pas-id = <28>;
+		qcom,vmid = <45>;
+		qcom,firmware-name = "trustedvm";
+		memory-region = <&trust_ui_vm_mem>;
+		virtio-backends = <&trust_ui_vm_virt_be0 &trust_ui_vm_virt_be1>;
+	};
+
+	gh-secure-vm-loader@2 {
+		compatible = "qcom,gh-secure-vm-loader";
+		qcom,pas-id = <35>;
+		qcom,vmid = <50>;
+		qcom,firmware-name = "cpusys_vm";
+		memory-region = <&cpusys_vm_mem>;
+	};
+
 	qcom,virtio_backend@0 {
 		compatible = "qcom,virtio_backend";
 		qcom,vm = <&trust_ui_vm>;
@@ -3257,7 +3310,6 @@
 		reg-names = "smmu_iova_ipa";
 		wlan-en-gpio = <&tlmm 80 0>;
 		qcom,bt-en-gpio = <&tlmm 81 0>;
-		qcom,sw-ctrl-gpio = <&tlmm 82 0>;
 		pinctrl-names = "wlan_en_active", "wlan_en_sleep";
 		pinctrl-0 = <&cnss_wlan_en_active>;
 		pinctrl-1 = <&cnss_wlan_en_sleep>;
@@ -3290,9 +3342,8 @@
 		<&gem_noc MASTER_ANOC_PCIE_GEM_NOC &mc_virt SLAVE_EBI1>;
 		interconnect-names = "pcie_to_memnoc", "memnoc_to_ddr";
 
-
 		qcom,icc-path-count = <2>;
-		qcom,bus-bw-cfg-count = <9>;
+		qcom,bus-bw-cfg-count = <7>;
 		qcom,bus-bw-cfg =
 		/** ICC Path 1 **/
 		<0 0>, /* no vote */
@@ -3302,14 +3353,10 @@
 		<7500 1600000>,
 		/* medium: 60-240 Mbps snoc/anoc: 100 Mhz ddr: 451.2 MHz */
 		<30000 1600000>,
-		/* high: 240-1200 Mbps snoc/anoc: 200 Mhz ddr: 451.2 MHz */
-		<100000 3200000>,
-		/* very high: > 1200 Mbps snoc/anoc: 403 Mhz ddr: 1555 MHz */
+		/* high: 240-1200 Mbps snoc/anoc: 100 Mhz ddr: 451.2 MHz */
+		<100000 1600000>,
+		/* very high: > 1200 Mbps snoc/anoc: 403 Mhz ddr: 451.2 MHz */
 		<175000 6448000>,
-		/* ultra high: DBS mode snoc/anoc: 403 Mhz ddr: 2092 MHz */
-		<175000 6448000>,
-		/* super high: DBS mode snoc/anoc: 533 Mhz ddr: 3.2GHz */
-		<175000 8528000>,
 		/* low (latency critical): 18-60 Mbps snoc/anoc: 200 Mhz
 		 * ddr: 547.2 MHz
 		 */
@@ -3317,21 +3364,11 @@
 
 		/** ICC Path 2 **/
 		<0 0>,
-		/* ddr: 451.2 MHz */
 		<2250 1804800>,
-		/* ddr: 451.2 MHz */
 		<7500 1804800>,
-		/* ddr: 451.2 MHz */
 		<30000 1804800>,
-		/* ddr: 451.2 MHz */
 		<100000 1804800>,
-		/* ddr: 1555 MHz */
 		<175000 6220800>,
-		/* ddr: 2092 MHz */
-		<175000 8368000>,
-		/* ddr: 3.2 GHz */
-		<175000 12800000>,
-		/* ddr: 547.2 MHz */
 		<7500 2188800>;
 	};
 
