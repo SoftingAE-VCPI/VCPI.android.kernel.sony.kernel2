@@ -1003,3 +1003,4 @@ const struct cs35l41_otp_trim_region_t
 	{0x00004000, 1},
 	{0x00017040, 2},
 };
+MODULE_LICENSE("GPL v2");

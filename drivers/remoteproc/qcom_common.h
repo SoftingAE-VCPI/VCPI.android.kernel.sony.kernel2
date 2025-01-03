@@ -82,7 +82,7 @@ struct qcom_ssr_subsystem *qcom_ssr_get_subsys(const char *name);
 int qcom_notify_ssr_clients(struct qcom_ssr_subsystem *info, int state,
 							struct qcom_ssr_notify_data *data);
 
-#if IS_ENABLED(CONFIG_QCOM_SYSMON)
+#if IS_ENABLED(CONFIG_QCOM_SYSMON) || IS_ENABLED(CONFIG_QCOM_SYSMON_MODULE)
 struct qcom_sysmon *qcom_add_sysmon_subdev(struct rproc *rproc,
 					   const char *name,
 					   int ssctl_instance);
